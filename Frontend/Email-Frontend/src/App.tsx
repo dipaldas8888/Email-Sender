@@ -27,6 +27,7 @@ function App() {
       const res = await axios.post("http://127.0.0.1:8000/send-bulk-email", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      console.log(res.data);
       setResults(res.data.results);
     } catch (err: any) {
       alert("Error sending emails: " + err.message);
