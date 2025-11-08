@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, Loader2, Mail } from "lucide-react";
 
 function App() {
   const [subject, setSubject] = useState("");
@@ -7,6 +9,7 @@ function App() {
   const [emails, setEmails] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [results, setResults] = useState<any[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,8 +30,15 @@ function App() {
       const res = await axios.post("http://127.0.0.1:8000/send-bulk-email", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log(res.data);
       setResults(res.data.results);
+      setSuccess(true);
+
+      setSubject("");
+      setBody("");
+      setEmails("");
+      setFile(null);
+
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       alert("Error sending emails: " + err.message);
     } finally {
@@ -37,10 +47,33 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen  from-blue-800 to-blue-900 flex flex-col items-center py-10">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8">
-        <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">📧 Job Mail Sender</h1>
+    <div className="min-h-screen bg-gradient-to-b from-blue-800 to-blue-900 flex flex-col items-center py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-8"
+      >
+        <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center flex items-center justify-center gap-2">
+          <Mail className="text-blue-700" /> Job Mail Sender
+        </h1>
 
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.4 }}
+              className="flex items-center justify-center text-green-600 mb-4"
+            >
+              <CheckCircle className="w-8 h-8 mr-2" />
+              <span className="text-lg font-medium">Emails sent successfully!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* FORM */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium mb-1">Subject</label>
@@ -84,13 +117,21 @@ function App() {
             />
           </div>
 
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-300"
+            whileTap={{ scale: 0.97 }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-300 flex justify-center items-center gap-2"
           >
-            {loading ? "Sending..." : "Send Emails"}
-          </button>
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Sending...
+              </>
+            ) : (
+              "Send Emails"
+            )}
+          </motion.button>
         </form>
 
         {results.length > 0 && (
@@ -105,8 +146,8 @@ function App() {
             </div>
           </div>
         )}
-      </div>
-      <p className="mt-6 text-gray-500 text-sm">Made with ❤️ using FastAPI + React + Tailwind</p>
+      </motion.div>
+      <p className="mt-6 text-gray-300 text-sm">Made with ❤️ using FastAPI + React + Tailwind</p>
     </div>
   );
 }
